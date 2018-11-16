@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterController))]
 public class Character : MonoBehaviour
@@ -11,20 +12,41 @@ public class Character : MonoBehaviour
     [SerializeField, Range(1f, 5f)]
     private float rotationSpeed = 1f;
 
+    [SerializeField, Range(1f, 5f)]
+    private float interactionRange = 1f;
+
     [SerializeField]
+    private Sprite reticleDefault;
+
+    [SerializeField]
+    private Sprite reticleLocked;
+
+    [SerializeField]
+    private Sprite reticleOpen;
+
     private Camera lookCamera;
 
     private CharacterController controller;
 
+    private RawImage reticleImage;
+
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+        lookCamera = GetComponentInChildren<Camera>();
+        reticleImage = GetComponentInChildren<RawImage>();
+
+        reticleImage.texture = reticleDefault.texture;
+        reticleImage.SetNativeSize();
+        UpdateReticle();
     }
 
     private void Update()
     {
         UpdatePosition();
         UpdateRotation();
+        var hitInfo = UpdateReticle();
+        UpdateInteraction(hitInfo);
     }
 
     private void UpdatePosition()
@@ -35,7 +57,6 @@ public class Character : MonoBehaviour
         var speedVector = new Vector3(horizontal, 0, vertical);
         speedVector.ClampToOne();
 
-        // TODO speedVector needs to be rotated so it is relative to the gameObject
         controller.SimpleMove(transform.rotation * speedVector * movementSpeed);
     }
 
@@ -49,5 +70,45 @@ public class Character : MonoBehaviour
 
         transform.Rotate(Vector3.up, mouseX * rotationSpeed, Space.Self);
         lookCamera.transform.Rotate(Vector3.left, mouseY * rotationSpeed);
+    }
+
+    private RaycastHit? UpdateReticle()
+    {
+        var viewDirection = lookCamera.transform.rotation * Vector3.forward;
+        var ray = new Ray(lookCamera.transform.position, viewDirection);
+
+        RaycastHit hitInfo;
+        if (Physics.Raycast(lookCamera.transform.position, viewDirection, out hitInfo, interactionRange)
+            && hitInfo.collider.gameObject.CompareTag(TimeLock.TAG))
+        {
+            var timeLock = hitInfo.collider.gameObject.GetComponent<TimeLock>();
+            switch (timeLock.CurrentState)
+            {
+                case TimeLock.State.Locked:
+                    reticleImage.texture = reticleLocked.texture;
+                    break;
+                case TimeLock.State.Unlocked:
+                    reticleImage.texture = reticleOpen.texture;
+                    break;
+                default:
+                    reticleImage.texture = reticleDefault.texture;
+                    Debug.LogWarning($"No reticle image defined for TimeLock.CurrentState({timeLock.CurrentState})");
+                    break;
+            }
+            return hitInfo;
+        }
+        else
+        {
+            reticleImage.texture = reticleDefault.texture;
+            return null;
+        }
+    }
+
+    private void UpdateInteraction(RaycastHit? hitInfo)
+    {
+        if(Input.GetButtonDown("Interact") && hitInfo.HasValue)
+        {
+            hitInfo.Value.collider.GetComponent<TimeLock>().TryOpen();
+        }
     }
 }
