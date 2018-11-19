@@ -10,9 +10,6 @@ public static class EditorHelper
         SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
         SerializedProperty tagsProp = tagManager.FindProperty("tags");
 
-        // For Unity 5 we need this too
-        SerializedProperty layersProp = tagManager.FindProperty("layers");
-
         // First check if it is not already present
         bool found = false;
         for (int i = 0; i < tagsProp.arraySize; i++)
@@ -29,11 +26,20 @@ public static class EditorHelper
             n.stringValue = tag;
         }
 
-        // Setting a Layer (Let's set Layer 10)
-        string layerName = "the_name_want_to_give_it";
+        // and to save the changes
+        tagManager.ApplyModifiedProperties();
+    }
+
+    public static void EnsureLayerExists(string layerName, int layerIndex = 10)
+    {
+        // Open tag manager
+        SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+
+        // For Unity 5 we need this too
+        SerializedProperty layersProp = tagManager.FindProperty("layers");
 
         // --- Unity 5 ---
-        SerializedProperty sp = layersProp.GetArrayElementAtIndex(10);
+        SerializedProperty sp = layersProp.GetArrayElementAtIndex(layerIndex);
         if (sp != null) sp.stringValue = layerName;
         // and to save the changes
         tagManager.ApplyModifiedProperties();
