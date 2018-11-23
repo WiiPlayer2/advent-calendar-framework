@@ -59,6 +59,7 @@ public class TimeLock : MonoBehaviour
         clock.OnDayChanged.AddListener(OnDayChanged);
 
         gameObject.tag = TAG;
+        OnDayChanged();
     }
 
     private void OnDayChanged()
