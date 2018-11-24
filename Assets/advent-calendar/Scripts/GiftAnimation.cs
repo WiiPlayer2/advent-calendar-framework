@@ -15,6 +15,8 @@ public class GiftAnimation : MonoBehaviour
 
         private Quaternion targetRotation;
 
+        private Vector3 startingScale;
+
         private Vector3 targetScale;
 
         private Vector3 pathDifference;
@@ -26,6 +28,7 @@ public class GiftAnimation : MonoBehaviour
 
             targetPosition = gameObject.transform.position;
             targetRotation = gameObject.transform.rotation;
+            startingScale = gameObject.GetComponent<AnimationStartingScale>()?.StartingScale ?? Vector3.zero;
             targetScale = gameObject.transform.localScale;
             pathDifference = targetPosition - animation.path.GetPosition(1f);
 
@@ -35,9 +38,8 @@ public class GiftAnimation : MonoBehaviour
         public void Update(float tPos, float tRotation, float tScale, Vector3 pathPostion)
         {
             gameObject.transform.position = pathPostion + pathDifference * tPos;
-            gameObject.transform.rotation = Quaternion.Lerp(animation.transform.rotation, targetRotation, tRotation);
-            // TODO implement starting scale
-            gameObject.transform.localScale = Vector3.Lerp(Vector3.one, targetScale, tScale);
+            gameObject.transform.rotation = Quaternion.LerpUnclamped(animation.transform.rotation, targetRotation, tRotation);
+            gameObject.transform.localScale = Vector3.LerpUnclamped(startingScale, targetScale, tScale);
         }
     }
 
