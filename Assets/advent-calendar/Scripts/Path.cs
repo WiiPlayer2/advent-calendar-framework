@@ -169,7 +169,7 @@ public class Path : MonoBehaviour
         LoadAlgorithm();
     }
 
-    private void LoadAlgorithm()
+    public void LoadAlgorithm()
     {
         switch (algorithmType)
         {
