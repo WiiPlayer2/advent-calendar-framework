@@ -17,8 +17,11 @@ public class Path : MonoBehaviour
 
         private readonly Vector3[] buffer;
 
-        public SingleBezierAlgorithm(params Vector3[] points)
+        private readonly bool clamped;
+
+        public SingleBezierAlgorithm(bool clamped, params Vector3[] points)
         {
+            this.clamped = clamped;
             this.points = points;
             buffer = new Vector3[points.Length];
         }
@@ -38,7 +41,10 @@ public class Path : MonoBehaviour
 
             for (var i = 0; i < length - 1; i++)
             {
-                buffer[i] = Vector3.Lerp(buffer[i], buffer[i + 1], t);
+                if (clamped)
+                    buffer[i] = Vector3.Lerp(buffer[i], buffer[i + 1], t);
+                else
+                    buffer[i] = Vector3.LerpUnclamped(buffer[i], buffer[i + 1], t);
             }
             return GetPosition(t, length - 1);
         }
@@ -51,13 +57,13 @@ public class Path : MonoBehaviour
 
         private readonly Vector3[] points;
 
-        public BezierSplinesAlgorithm(Vector3[] points)
+        public BezierSplinesAlgorithm(bool clamped, Vector3[] points)
         {
             this.points = points;
             if (points.Length < 3)
                 return;
 
-            CreateSplines();
+            CreateSplines(clamped);
         }
 
         private Vector3[] CalcSplinePoints()
@@ -86,7 +92,7 @@ public class Path : MonoBehaviour
             return totalLength;
         }
 
-        private void CreateSplines()
+        private void CreateSplines(bool clamped)
         {
             var splinePoints = CalcSplinePoints();
             var totalLength = CalcTotalLength();
@@ -97,7 +103,7 @@ public class Path : MonoBehaviour
                 splines.Add(Tuple.Create(
                     currentOffset / totalLength,
                     length / totalLength,
-                    new SingleBezierAlgorithm(splinePoints[i], splinePoints[i + 1], splinePoints[i + 2])));
+                    new SingleBezierAlgorithm(clamped, splinePoints[i], splinePoints[i + 1], splinePoints[i + 2])));
                 currentOffset += length;
             }
         }
@@ -114,7 +120,7 @@ public class Path : MonoBehaviour
                     return Vector3.Lerp(points[0], points[1], t);
             }
 
-            var data = splines.LastOrDefault(o => t >= o.Item1);
+            var data = splines.LastOrDefault(o => t >= o.Item1) ?? splines.FirstOrDefault();
             if (data == null)
                 return Vector3.zero;
 
@@ -127,6 +133,8 @@ public class Path : MonoBehaviour
     {
         SingleBezier,
         BezierSplines,
+        SingleBezierUnclamped,
+        BezierSplinesUnclamped,
     }
 
     public const int TESSELATION = 100;
@@ -164,7 +172,7 @@ public class Path : MonoBehaviour
 
     private void LoadPoints()
     {
-        if(!IsBaked)
+        if (!IsBaked)
             Points = Nodes?.Select(o => o.transform.position).ToArray() ?? new Vector3[0];
         LoadAlgorithm();
     }
@@ -174,10 +182,16 @@ public class Path : MonoBehaviour
         switch (algorithmType)
         {
             case PathAlgorithm.SingleBezier:
-                pathAlgorithm = new SingleBezierAlgorithm(Points);
+                pathAlgorithm = new SingleBezierAlgorithm(true, Points);
                 break;
             case PathAlgorithm.BezierSplines:
-                pathAlgorithm = new BezierSplinesAlgorithm(Points);
+                pathAlgorithm = new BezierSplinesAlgorithm(true, Points);
+                break;
+            case PathAlgorithm.SingleBezierUnclamped:
+                pathAlgorithm = new SingleBezierAlgorithm(false, Points);
+                break;
+            case PathAlgorithm.BezierSplinesUnclamped:
+                pathAlgorithm = new BezierSplinesAlgorithm(false, Points);
                 break;
             default:
                 throw new NotImplementedException($"Algorithm {algorithmType} is not implemented yet.");
