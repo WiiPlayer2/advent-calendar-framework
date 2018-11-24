@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class PathAnimation : MonoBehaviour
+public class Path : MonoBehaviour
 {
     private interface IPathAlgorithm
     {
@@ -141,10 +141,13 @@ public class PathAnimation : MonoBehaviour
     private PathAlgorithm algorithmType = PathAlgorithm.SingleBezier;
 
     [SerializeField, HideInInspector]
-    public List<PathAnimationNode> Nodes;
+    public List<PathNode> Nodes = new List<PathNode>();
 
     [SerializeField, HideInInspector]
-    private Vector3[] points;
+    public Vector3[] Points = new Vector3[0];
+
+    [SerializeField, HideInInspector]
+    public bool IsBaked = false;
 
     private IPathAlgorithm pathAlgorithm;
 
@@ -153,42 +156,53 @@ public class PathAnimation : MonoBehaviour
         LoadPoints();
     }
 
-    internal void OnDrawGizmos()
+    public void BakePoints()
     {
         LoadPoints();
-
-        Gizmos.color = GIZMO_COLOR;
-        for (var i = 1; i < points.Length; i++)
-        {
-            Gizmos.DrawLine(points[i - 1], points[i]);
-        }
+        IsBaked = true;
     }
 
     private void LoadPoints()
     {
-        points = Nodes?.Select(o => o.transform.position).ToArray() ?? new Vector3[0];
+        if(!IsBaked)
+            Points = Nodes?.Select(o => o.transform.position).ToArray() ?? new Vector3[0];
+        LoadAlgorithm();
+    }
+
+    private void LoadAlgorithm()
+    {
         switch (algorithmType)
         {
             case PathAlgorithm.SingleBezier:
-                pathAlgorithm = new SingleBezierAlgorithm(points);
+                pathAlgorithm = new SingleBezierAlgorithm(Points);
                 break;
             case PathAlgorithm.BezierSplines:
-                pathAlgorithm = new BezierSplinesAlgorithm(points);
+                pathAlgorithm = new BezierSplinesAlgorithm(Points);
                 break;
             default:
                 throw new NotImplementedException($"Algorithm {algorithmType} is not implemented yet.");
         }
     }
 
+    internal void OnDrawGizmos()
+    {
+        LoadPoints();
+
+        Gizmos.color = GIZMO_COLOR;
+        for (var i = 1; i < Points.Length; i++)
+        {
+            Gizmos.DrawLine(Points[i - 1], Points[i]);
+        }
+    }
+
     internal void OnDrawGizmosSelected()
     {
         LoadPoints();
-        if (points?.Length < 2)
+        if (Points?.Length < 2)
             return;
 
         Gizmos.color = GIZMO_PATH_COLOR;
         var lastPoint = GetPosition(0);
-
         for (var t = TESSELATION_STEP; t <= 1f; t += TESSELATION_STEP)
         {
             var currentPoint = GetPosition(t);

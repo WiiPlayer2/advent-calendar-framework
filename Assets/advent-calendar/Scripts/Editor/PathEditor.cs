@@ -1,23 +1,24 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
+using System.Linq;
 
-[CustomEditor(typeof(PathAnimation))]
-public class PathAnimationEditor : Editor
+[CustomEditor(typeof(Path))]
+public class PathEditor : Editor
 {
     private ReorderableList reorderableList;
 
-    private PathAnimation PathAnimation
+    private Path Path
     {
         get
         {
-            return target as PathAnimation;
+            return target as Path;
         }
     }
 
     private void OnEnable()
     {
-        reorderableList = new ReorderableList(PathAnimation.Nodes, typeof(PathAnimationNode), true, true, true, true);
+        reorderableList = new ReorderableList(Path.Nodes, typeof(PathNode), true, true, true, true);
 
         // This could be used aswell, but I only advise this your class inherrits from UnityEngine.Object or has a CustomPropertyDrawer
         // Since you'll find your item using: serializedObject.FindProperty("list").GetArrayElementAtIndex(index).objectReferenceValue
@@ -60,7 +61,7 @@ public class PathAnimationEditor : Editor
     /// <param name="focused"></param>
     private void DrawElement(Rect rect, int index, bool active, bool focused)
     {
-        PathAnimationNode item = PathAnimation.Nodes[index];
+        PathNode item = Path.Nodes[index];
 
         // EditorGUI.BeginChangeCheck();
         // item.boolValue = EditorGUI.Toggle(new Rect(rect.x, rect.y, 18, rect.height), item.boolValue);
@@ -78,29 +79,59 @@ public class PathAnimationEditor : Editor
 
     private void AddItem(ReorderableList list)
     {
-        var gameObj = new GameObject($"{PathAnimation.name} | Path Node", typeof(PathAnimationNode));
-        gameObj.transform.parent = PathAnimation.transform;
-        gameObj.transform.position = PathAnimation.transform.position;
-        var node = gameObj.GetComponent<PathAnimationNode>();
-        PathAnimation.Nodes.Add(node);
+        var node = CreateNode(Path.transform.position);
+        Path.Nodes.Add(node);
+        Selection.activeGameObject = node.gameObject;
 
         EditorUtility.SetDirty(target);
     }
 
     private void RemoveItem(ReorderableList list)
     {
-        var node = PathAnimation.Nodes[list.index];
-        PathAnimation.Nodes.RemoveAt(list.index);
+        var node = Path.Nodes[list.index];
+        Path.Nodes.RemoveAt(list.index);
         DestroyImmediate(node.gameObject);
 
         EditorUtility.SetDirty(target);
+    }
+
+    private PathNode CreateNode(Vector3 position)
+    {
+        var gameObj = new GameObject($"{Path.name} | Path Node", typeof(PathNode));
+        gameObj.transform.parent = Path.transform;
+        gameObj.transform.position = position;
+        var node = gameObj.GetComponent<PathNode>();
+        node.Path = Path;
+        return node;
     }
 
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
 
-        // Actually draw the list in the inspector
-        reorderableList.DoLayoutList();
+        if(Path.IsBaked)
+        {
+            if(GUILayout.Button("Edit Nodes"))
+            {
+                foreach(var p in Path.Points)
+                {
+                    Path.Nodes.Add(CreateNode(p));
+                }
+                Path.IsBaked = false;
+            }
+        }
+        else
+        {
+            reorderableList.DoLayoutList();
+            if(GUILayout.Button("Bake Nodes"))
+            {
+                Path.BakePoints();
+                foreach(var n in Path.Nodes)
+                {
+                    DestroyImmediate(n.gameObject);
+                }
+                Path.Nodes.Clear();
+            }
+        }
     }
 }
