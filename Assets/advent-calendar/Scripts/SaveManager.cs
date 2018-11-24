@@ -33,7 +33,7 @@ public class SaveManager : MonoBehaviour
 
     private void Start()
     {
-        saveFileFullName = Path.Combine(Application.persistentDataPath, saveFile);
+        saveFileFullName = System.IO.Path.Combine(Application.persistentDataPath, saveFile);
 
         yamlDeserializer = new DeserializerBuilder().Build();
         yamlSerializer = new SerializerBuilder().Build();

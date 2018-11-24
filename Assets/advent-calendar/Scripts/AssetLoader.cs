@@ -53,7 +53,7 @@ public class AssetLoader : MonoBehaviour
         }
 
         isLoading = true;
-        var file = Path.Combine(ASSETBUNDLE_DIRECTORY, assetBundle);
+        var file = System.IO.Path.Combine(ASSETBUNDLE_DIRECTORY, assetBundle);
         if(!File.Exists(file))
         {
             using(var www = UnityWebRequest.Get(assetUrl))
