@@ -6,6 +6,10 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CharacterController))]
 public class Character : MonoBehaviour
 {
+    private const float MIN_CAMERA_ROTATION = -80f;
+    
+    private const float MAX_CAMERA_ROTATION = 80f;
+
     [SerializeField, Range(1f, 5f)]
     private float movementSpeed = 1f;
 
@@ -70,6 +74,14 @@ public class Character : MonoBehaviour
 
         transform.Rotate(Vector3.up, mouseX * rotationSpeed, Space.Self);
         lookCamera.transform.Rotate(Vector3.left, mouseY * rotationSpeed);
+
+        // TODO make simpler
+        var currentRotation = lookCamera.transform.localRotation.eulerAngles;
+        currentRotation.x = currentRotation.x >= 180f ? currentRotation.x - 360f : currentRotation.x;
+        currentRotation.y = 0f;
+        currentRotation.z = 0f;
+        currentRotation.x = Mathf.Clamp(currentRotation.x, MIN_CAMERA_ROTATION, MAX_CAMERA_ROTATION);
+        lookCamera.transform.localRotation = Quaternion.Euler(currentRotation);
     }
 
     private RaycastHit? UpdateReticle()
