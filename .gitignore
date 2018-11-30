@@ -380,3 +380,6 @@ sysinfo.txt
 .history
 
 # End of https://www.gitignore.io/api/unity,csharp,visualstudiocode
+
+# include unity package manifest
+!/Packages/manifest.json
