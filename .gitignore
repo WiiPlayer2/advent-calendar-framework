@@ -68,7 +68,7 @@ StyleCopReport.xml
 *_p.c
 *_h.h
 *.ilk
-*.meta
+#*.meta
 *.obj
 *.iobj
 *.pch
@@ -380,3 +380,6 @@ sysinfo.txt
 .history
 
 # End of https://www.gitignore.io/api/unity,csharp,visualstudiocode
+
+# include unity package manifest
+!/Packages/manifest.json
