@@ -16,13 +16,13 @@ public class AssetLoader : MonoBehaviour
     private GameObject loadingObject;
 
     [SerializeField]
-    private string assetBundle;
+    public string AssetBundle;
 
     [SerializeField]
-    private string assetName;
+    public string AssetName;
 
     [SerializeField]
-    private string assetUrl;
+    public string AssetUrl;
 
     [SerializeField]
     private Vector3 targetPosition;
@@ -53,10 +53,10 @@ public class AssetLoader : MonoBehaviour
         }
 
         isLoading = true;
-        var file = System.IO.Path.Combine(ASSETBUNDLE_DIRECTORY, assetBundle);
+        var file = System.IO.Path.Combine(ASSETBUNDLE_DIRECTORY, AssetBundle);
         if(!File.Exists(file))
         {
-            using(var www = UnityWebRequest.Get(assetUrl))
+            using(var www = UnityWebRequest.Get(AssetUrl))
             {
                 var handler = new DownloadHandlerFile(file);
                 www.downloadHandler = handler;
@@ -67,7 +67,7 @@ public class AssetLoader : MonoBehaviour
 
         if (File.Exists(file))
         {
-            var request = AssetBundle.LoadFromFileAsync(file);
+            var request = UnityEngine.AssetBundle.LoadFromFileAsync(file);
             yield return request;
             assets = request.assetBundle;
         }
@@ -84,7 +84,7 @@ public class AssetLoader : MonoBehaviour
 
         if (loadedAsset == null)
         {
-            var request = assets.LoadAssetAsync<GameObject>(assetName);
+            var request = assets.LoadAssetAsync<GameObject>(AssetName);
             yield return request;
             loadedAsset = request.asset as GameObject;
         }
