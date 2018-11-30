@@ -87,7 +87,6 @@ public class Character : MonoBehaviour
     private RaycastHit? UpdateReticle()
     {
         var viewDirection = lookCamera.transform.rotation * Vector3.forward;
-        var ray = new Ray(lookCamera.transform.position, viewDirection);
 
         RaycastHit hitInfo;
         if (Physics.Raycast(lookCamera.transform.position, viewDirection, out hitInfo, interactionRange)
