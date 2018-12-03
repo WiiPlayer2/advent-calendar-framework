@@ -69,6 +69,7 @@ public class SaveManager : MonoBehaviour
             try
             {
                 saveData = yamlDeserializer.Deserialize<SaveData>(File.ReadAllText(saveFileFullName));
+                saveData.OpenedLocks = saveData.OpenedLocks ?? new Dictionary<int, bool>();
                 Debug.Log($"Loaded data from {saveFileFullName}");
             }
             catch (Exception e)
