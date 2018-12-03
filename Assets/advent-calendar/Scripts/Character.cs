@@ -20,6 +20,9 @@ public class Character : MonoBehaviour
     private float interactionRange = 1f;
 
     [SerializeField]
+    private bool warnForUnhandledState = false;
+
+    [SerializeField]
     private Sprite reticleDefault;
 
     [SerializeField]
@@ -103,7 +106,8 @@ public class Character : MonoBehaviour
                     break;
                 default:
                     reticleImage.texture = reticleDefault.texture;
-                    Debug.LogWarning($"No reticle image defined for TimeLock.CurrentState({timeLock.CurrentState})");
+                    if(warnForUnhandledState)
+                        Debug.LogWarning($"No reticle image defined for TimeLock.CurrentState({timeLock.CurrentState})");
                     break;
             }
             return hitInfo;
